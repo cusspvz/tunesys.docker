@@ -1,7 +1,7 @@
 FROM alpine:edge
 MAINTAINER José Moreira <jose.moreira@findhit.com>
 ADD tunesys /tunesys
-RUN apk add --update docker && \
+RUN apk add --update docker bash && \
     rm -rf /var/cache/apk/*
 RUN chmod +x /tunesys/run /tunesys/common /tunesys/tuner/*
 ENV PROC=/proc
@@ -25,6 +25,7 @@ ENV TUNE_TCP=1 \
 ENV TUNE_DOCKER=1 \
     docker_remove_containers=1 \
     docker_remove_images=1 \
+    docker_filter=rancher \
     docker_loop_interval=21600
 
 WORKDIR /tunesys

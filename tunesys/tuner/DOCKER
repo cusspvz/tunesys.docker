@@ -1,19 +1,36 @@
-#!/bin/sh
+#!/bin/bash
+
+# Images
+USED_IMAGES=()
+CONTAINERS=$(docker ps -a | awk '{print $1}' | sed -n '1!p')
+IMAGES=$(docker images | awk '{print $3}' | sed -n '1!p')
 
 while true; do
 
-  if [ $docker_remove_containers == "1" ]; then
+  if [ "$docker_remove_containers" == "1" ]; then
 
     echo "Removing stoped docker container's "
     # This prevent all stoped container's from rancher stack being removed
-    docker ps -a -f status=exited | grep -v rancher| awk '{if(NR>1) print $1}' | xargs -r docker rm > /dev/null 2>&1
+    docker ps -a -f status=exited | grep -v $docker_filter | awk '{if(NR>1) print $1}' | xargs -r docker rm > /dev/null 2>&1
 
   fi
 
-  if [ $docker_remove_containers == "1" ]; then
+  if [ $docker_remove_images == "1" ]; then
 
     echo "Removing docker images that are not being used"
-    docker images -q | xargs docker rmi > /dev/null 2>&1
+
+    for x in $CONTAINERS; do
+      ID=$(docker inspect -f '{{ .Image }}' $x | awk '{print substr($0,0,12)}')
+      if [[ ${USED_IMAGES} != *$ID* ]]; then
+        USED_IMAGES+=$ID" "
+      fi
+    done
+
+    for x in $IMAGES; do
+      if [[ ${USED_IMAGES} != *$x* ]]; then
+        docker rmi $x > /dev/null 2>&1
+      fi
+    done
 
   fi
 
